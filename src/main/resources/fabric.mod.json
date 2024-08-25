@@ -1,0 +1,34 @@
+{
+	"schemaVersion": 1,
+	"id": "native-loader",
+	"version": "${version}",
+	"name": "Native Loader",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/native-loader/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.mlinetles.nativeloader.NativeLoader"
+		]
+	},
+	"mixins": [
+		"native-loader.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.15.11",
+		"minecraft": "~1.16.5",
+		"java": ">=8",
+		"fabric": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

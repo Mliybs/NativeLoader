@@ -16,7 +16,6 @@ public class ItemWrapper extends Item {
         super(settings);
         structure = new ItemStructure(new Pointer(handle));
         structure.read();
-        System.out.println(structure.getTranslationKey == null);
     }
 
     public static class ItemStructure extends Structure {

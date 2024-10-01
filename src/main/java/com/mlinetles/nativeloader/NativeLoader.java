@@ -24,8 +24,8 @@ public class NativeLoader implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
 
-		LOGGER.info("NativeLoader开始加载！");
-        // var identifier = '_' + System.getProperty("os.name").toLowerCase() + '_' + System.getProperty("os.arch");
+        System.setProperty("jna.encoding", "UTF-8");
+        LOGGER.info("NativeLoader开始加载！");
         var fabric = FabricLoader.getInstance();
         var resolver = fabric.getMappingResolver();
         var dir = fabric.getGameDir().resolve("nativeloader");
@@ -60,7 +60,7 @@ public class NativeLoader implements ModInitializer {
                             var file = namespace.resolve(x.getPath());
                             Files.copy(stream, file, StandardCopyOption.REPLACE_EXISTING);
                             LOGGER.info("正在加载：{}", file.toAbsolutePath());
-                            LoadedLibraries.Load(file.toAbsolutePath().toString(), resolver);
+                            LoadedLibraries.Load(file.toAbsolutePath().toString(), resolver, LOGGER);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }

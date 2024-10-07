@@ -2,9 +2,10 @@
 	"required": true,
 	"package": "com.mlinetles.nativeloader.mixin",
 	"compatibilityLevel": "JAVA_8",
-	"mixins": [
-		"ExampleMixin"
-	],
+	"mixins": [],
+    "client": [
+        "ResourcePackManagerMixin"
+    ],
 	"injectors": {
 		"defaultRequire": 1
 	}

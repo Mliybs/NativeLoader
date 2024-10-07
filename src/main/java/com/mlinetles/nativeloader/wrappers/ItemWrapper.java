@@ -18,6 +18,7 @@ public class ItemWrapper extends Item {
         structure.read();
     }
 
+    // 血的教训，不要把这个结构类设为private
     public static class ItemStructure extends Structure {
         public ItemStructure() {}
 
@@ -36,6 +37,6 @@ public class ItemWrapper extends Item {
     @Override
     public String getTranslationKey() {
         if (structure.getTranslationKey == Pointer.NULL) return super.getTranslationKey();
-        return (String)Function.getFunction(structure.getTranslationKey).invoke(Object.class, new Object[]{ this }, LoadedLibraries.options);
+        return (String)Function.getFunction(structure.getTranslationKey).invoke(Object.class, null, LoadedLibraries.options);
     }
 }

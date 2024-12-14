@@ -7,6 +7,7 @@ import com.sun.jna.Pointer;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.function.Consumer;
 
 /**
  * 用于无返回值函数式接口的包装器
@@ -26,14 +27,8 @@ public class InvocationHandlerWrapper implements InvocationHandler {
             case "toString": return proxy.toString();
         }
         var type = method.getReturnType();
-        if (type.equals(Void.TYPE)) {
-            function.invoke(Object.class, args, LoadedLibraries.options);
-            return null;
-        }
-        if (type.equals(Boolean.TYPE)) {
-            return function.invoke(Boolean.class, args, LoadedLibraries.options);
-        }
-        throw new RuntimeException();
+        if (type == String.class) type = Object.class;
+        return function.invoke(type, args, LoadedLibraries.options);
     }
 
     public static Object getProxyOf(Class<?> clazz, long handle) {

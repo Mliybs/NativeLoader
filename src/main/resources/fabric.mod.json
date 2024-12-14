@@ -17,16 +17,23 @@
 	"entrypoints": {
 		"main": [
 			"com.mlinetles.nativeloader.NativeLoader"
+		],
+		"client": [
+			"com.mlinetles.nativeloader.NativeLoaderClient"
 		]
 	},
 	"mixins": [
-		"native-loader.mixins.json"
+		"native-loader.mixins.json",
+		{
+			"config": "native-loader.client.mixins.json",
+			"environment": "client"
+		}
 	],
 	"depends": {
-		"fabricloader": ">=0.15.11",
-		"minecraft": "~1.16.5",
-		"java": ">=8",
-		"fabric": "*"
+		"fabricloader": ">=0.16.7",
+		"minecraft": "~1.20.4",
+		"java": ">=17",
+		"fabric-api": "*"
 	},
 	"suggests": {
 		"another-mod": "*"

@@ -2,7 +2,7 @@ package com.mlinetles.nativeloader;
 
 import com.sun.jna.*;
 import net.fabricmc.loader.api.MappingResolver;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.util.*;
 
@@ -11,22 +11,19 @@ public class LoadedLibraries {
 
     public interface LoadedNativeLibrary extends Library {
         void Load(JNIEnv env, MappingResolver resolver, Logger logger);
-        void Initialize();
     }
 
-    private static final List<LoadedNativeLibrary> libraries = new ArrayList<>();
+    private static final Set<String> libraries = new HashSet<>();
 
     public static final Map<String, Object> options = Collections.singletonMap(Library.OPTION_ALLOW_OBJECTS, Boolean.TRUE);
 
-    public static void Load(String path, MappingResolver resolver, Logger logger) {
+    public static void Load(String identifier, String path, MappingResolver resolver, Logger logger) {
         var library = Native.load(path, LoadedNativeLibrary.class, options);
-        libraries.add(library);
+        libraries.add(identifier);
         library.Load(JNIEnv.CURRENT, resolver, logger);
-        try { library.Initialize(); }
-        catch (UnsatisfiedLinkError ignored) {}
     }
 
-    public static List<LoadedNativeLibrary> getLibraries() {
+    public static Set<String> getLibraries() {
         return libraries;
     }
 }

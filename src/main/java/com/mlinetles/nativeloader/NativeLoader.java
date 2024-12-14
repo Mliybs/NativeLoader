@@ -21,7 +21,7 @@ public class NativeLoader implements ModInitializer {
 	// It is considered best practice to use your mod id as the logger's name.
 	// That way, it's clear which mod wrote info, warnings, and errors.
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static final HashMap<Path, ResourcePack> LOADED = new HashMap<>();
+    private static final HashSet<ResourcePack> LOADED = new HashSet<>();
 	@Override
 	public void onInitialize() {
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
@@ -31,15 +31,13 @@ public class NativeLoader implements ModInitializer {
 	}
 
     public static void loadResourcePacks(ResourcePackManager manager) {
+        if (!LOADED.isEmpty()) return;
         System.setProperty("jna.encoding", "UTF-8");
         LOGGER.info("NativeLoader开始加载！");
 
         var fabric = FabricLoader.getInstance();
-        var loaded = new HashSet<ResourcePack>();
-        var dir = fabric.getGameDir().resolve("nativeloader").resolve("temp");
         var packs = fabric.getGameDir().resolve("nativepacks");
         try {
-            Files.createDirectories(dir);
             Files.createDirectories(packs);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -51,15 +49,13 @@ public class NativeLoader implements ModInitializer {
 
                 if ((Files.isRegularFile(x) && x.toString().endsWith(".zip")))
                     try (var pack = new ZipResourcePack.ZipBackedFactory(x.toFile(), true).open(x.getFileName().toString())) {
-                        LOADED.put(dir, pack);
-                        loaded.add(pack);
+                        LOADED.add(pack);
                     } catch (Exception e) {
                         LOGGER.error(e.toString());
                     }
                 else if (Files.isDirectory(x))
                     try (var pack = new DirectoryResourcePack.DirectoryBackedFactory(x, true).open(x.getFileName().toString())) {
-                        LOADED.put(dir, pack);
-                        loaded.add(pack);
+                        LOADED.add(pack);
                     } catch (Exception e) {
                         LOGGER.error(e.toString());
                     }
@@ -79,25 +75,20 @@ public class NativeLoader implements ModInitializer {
             var providers = (Set<ResourcePackProvider>)field.get(manager);
             if (providers.stream().noneMatch(x -> x instanceof NativeResourcePackProvider))
                 field.set(manager, new ImmutableSet.Builder<ResourcePackProvider>()
-                    .add(new NativeResourcePackProvider(loaded))
+                    .add(new NativeResourcePackProvider(LOADED))
                     .addAll(providers).build());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static void onLoad(Path dir, ResourcePack pack) {
+    private static void onLoad(ResourcePack pack) {
         pack.getNamespaces(ResourceType.CLIENT_RESOURCES).forEach(y -> {
-            var isEmpty = new IsEmpty();
             pack.findResources(ResourceType.CLIENT_RESOURCES, y, "natives", (z, supplier) -> {
                 if (!(z.getPath().endsWith(".dll") || z.getPath().endsWith(".so") || z.getPath().endsWith(".dylib")))
                     return;
 
-                isEmpty.setFalse();
-
                 try (var stream = supplier.get()) {
-                    var namespace = dir.resolve(pack.getName()).resolve(z.getNamespace());
-                    Files.createDirectories(namespace.resolve("natives"));
                     var path = z.getPath();
                     if (LoadedLibraries.getLibraries().contains(path)) {
                         LOGGER.info("忽略重复加载：{}:{}", z.getNamespace(), path);
@@ -114,31 +105,6 @@ public class NativeLoader implements ModInitializer {
                     throw new RuntimeException(e);
                 }
             });
-
-            if (isEmpty.isEmpty())
-                try (var files = Files.walk(dir.resolve(pack.getName()))) {
-                    files.sorted(Comparator.reverseOrder()).forEach(x -> {
-                        try {
-                            Files.delete(x);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
         });
-    }
-
-    private static class IsEmpty {
-        private boolean isEmpty = true;
-
-        public void setFalse() {
-            isEmpty = false;
-        }
-
-        public boolean isEmpty() {
-            return this.isEmpty;
-        }
     }
 }

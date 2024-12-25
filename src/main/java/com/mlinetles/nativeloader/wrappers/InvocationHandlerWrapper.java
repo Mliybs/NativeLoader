@@ -13,6 +13,8 @@ import java.util.function.Consumer;
  * 用于无返回值函数式接口的包装器
  */
 public class InvocationHandlerWrapper implements InvocationHandler {
+    private static Function onFinalize;
+
     private final Function function;
 
     private InvocationHandlerWrapper(long handle) {
@@ -31,7 +33,13 @@ public class InvocationHandlerWrapper implements InvocationHandler {
         return function.invoke(type, args, LoadedLibraries.options);
     }
 
-    public static Object getProxyOf(Class<?> clazz, long handle) {
-        return Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{ clazz }, new InvocationHandlerWrapper(handle));
+    private static void setOnFinalize(long handle) {
+        onFinalize = Function.getFunction(new Pointer(handle));
+    }
+
+    public static Object getProxyOf(Class<?> clazz, long handle, int id) {
+        var object = Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{ clazz }, new InvocationHandlerWrapper(handle));
+        WrapperStatics.CLEANER.register(object, () -> onFinalize.invokeVoid(new Object[] { id }));
+        return object;
     }
 }

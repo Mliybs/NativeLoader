@@ -20,17 +20,12 @@ public class NativeLoader implements ModInitializer {
 	// It is considered best practice to use your mod id as the logger's name.
 	// That way, it's clear which mod wrote info, warnings, and errors.
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    private static final HashSet<ResourcePack> LOADED = new HashSet<>();
+    public static final Map<String, ResourcePackProfile.PackFactory> LOADED = new HashMap<>();
 	@Override
 	public void onInitialize() {
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
-        LOADED.forEach(NativeLoader::onLoad);
-	}
-
-    public static void loadResourcePacks(ResourcePackManager manager) {
-        if (!LOADED.isEmpty()) return;
         System.setProperty("jna.encoding", "UTF-8");
         LOGGER.info("NativeLoader开始加载！");
 
@@ -47,63 +42,60 @@ public class NativeLoader implements ModInitializer {
                 if (x == packs) return;
 
                 if ((Files.isRegularFile(x) && x.toString().endsWith(".zip")))
-                    try (var pack = new ZipResourcePack.ZipBackedFactory(x.toFile(), true).open(x.getFileName().toString())) {
-                        LOADED.add(pack);
-                    } catch (Exception e) {
-                        LOGGER.error(e.toString());
-                    }
+                    LOADED.put(x.getFileName().toString(), new ZipResourcePack.ZipBackedFactory(x.toFile(), true));
                 else if (Files.isDirectory(x))
-                    try (var pack = new DirectoryResourcePack.DirectoryBackedFactory(x, true).open(x.getFileName().toString())) {
-                        LOADED.add(pack);
-                    } catch (Exception e) {
-                        LOGGER.error(e.toString());
-                    }
+                    LOADED.put(x.getFileName().toString(), new DirectoryResourcePack.DirectoryBackedFactory(x, true));
             });
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        LOADED.forEach(NativeLoader::onLoad);
+	}
 
+    public static void onProvider(ResourcePackManager manager, ResourceType type) {
         try {
             var field = ResourcePackManager.class
-                    .getDeclaredField(fabric.getMappingResolver().mapFieldName("intermediary",
+                    .getDeclaredField(FabricLoader.getInstance().getMappingResolver().mapFieldName("intermediary",
                             "net.minecraft.class_3283",
                             "field_14227",
                             "Ljava/util/Set;"));
             field.setAccessible(true);
             @SuppressWarnings("unchecked")
-            var providers = (Set<ResourcePackProvider>)field.get(manager);
+            var providers = (Set<ResourcePackProvider>) field.get(manager);
             if (providers.stream().noneMatch(x -> x instanceof NativeResourcePackProvider))
                 field.set(manager, new ImmutableSet.Builder<ResourcePackProvider>()
-                    .add(new NativeResourcePackProvider(LOADED))
-                    .addAll(providers).build());
+                        .add(new NativeResourcePackProvider(LOADED, type))
+                        .addAll(providers).build());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static void onLoad(ResourcePack pack) {
-        pack.getNamespaces(ResourceType.CLIENT_RESOURCES).forEach(y -> {
-            pack.findResources(ResourceType.CLIENT_RESOURCES, y, "natives", (z, supplier) -> {
-                if (!(z.getPath().endsWith(".dll") || z.getPath().endsWith(".so") || z.getPath().endsWith(".dylib")))
-                    return;
-
-                try (var stream = supplier.get()) {
-                    var path = z.getPath();
-                    if (LoadedLibraries.getLibraries().contains(path)) {
-                        LOGGER.info("忽略重复加载：{}:{}", z.getNamespace(), path);
+    private static void onLoad(String name, ResourcePackProfile.PackFactory factory) {
+        try (var pack = factory.open(name)) {
+            pack.getNamespaces(ResourceType.CLIENT_RESOURCES).forEach(y -> {
+                pack.findResources(ResourceType.CLIENT_RESOURCES, y, "natives", (z, supplier) -> {
+                    if (!(z.getPath().endsWith(".dll") || z.getPath().endsWith(".so") || z.getPath().endsWith(".dylib")))
                         return;
+
+                    try (var stream = supplier.get()) {
+                        var path = z.getPath();
+                        if (LoadedLibraries.getLibraries().contains(path)) {
+                            LOGGER.info("忽略重复加载：{}:{}", z.getNamespace(), path);
+                            return;
+                        }
+                        LOGGER.info("正在加载：{}:{}", z.getNamespace(), path);
+                        var index = path.lastIndexOf((int) '.');
+                        var temp = java.io.File.createTempFile(path.substring(0, index), path.substring(index));
+                        temp.deleteOnExit();
+                        Files.copy(stream, temp.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        LoadedLibraries.Load(path, temp.getAbsolutePath(), FabricLoader.getInstance().getMappingResolver(), LOGGER);
+                        LOGGER.info("加载成功：{}:{}", z.getNamespace(), path);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
-                    LOGGER.info("正在加载：{}:{}", z.getNamespace(), path);
-                    var index = path.lastIndexOf((int)'.');
-                    var temp = java.io.File.createTempFile(path.substring(0, index), path.substring(index));
-                    temp.deleteOnExit();
-                    Files.copy(stream, temp.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    LoadedLibraries.Load(path, temp.getAbsolutePath(), FabricLoader.getInstance().getMappingResolver(), LOGGER);
-                    LOGGER.info("加载成功：{}:{}", z.getNamespace(), path);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                });
             });
-        });
+        }
     }
 }

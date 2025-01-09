@@ -2,8 +2,7 @@
 	"required": true,
 	"package": "com.mlinetles.nativeloader.mixin",
 	"compatibilityLevel": "JAVA_17",
-	"mixins": [],
-    "client": [
+	"mixins": [
         "ResourcePackManagerMixin"
     ],
 	"injectors": {

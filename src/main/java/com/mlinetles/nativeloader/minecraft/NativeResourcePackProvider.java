@@ -3,11 +3,12 @@ package com.mlinetles.nativeloader.minecraft;
 import net.minecraft.resource.*;
 import net.minecraft.text.Text;
 
-import java.util.Set;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class NativeResourcePackProvider implements ResourcePackProvider {
-    private final Set<ResourcePack> _paths;
+    private final Map<String, ResourcePackProfile.PackFactory> _factories;
+    private final ResourceType _type;
     private static final ResourcePackSource _source = new ResourcePackSource() {
         @Override
         public Text decorate(Text packName) {
@@ -20,25 +21,16 @@ public class NativeResourcePackProvider implements ResourcePackProvider {
         }
     };
 
-    public NativeResourcePackProvider(Set<ResourcePack> paths) {
-        _paths = paths;
+    public NativeResourcePackProvider(Map<String, ResourcePackProfile.PackFactory> factories, ResourceType type) {
+        _factories = factories;
+        _type = type;
     }
 
     public void register(Consumer<ResourcePackProfile> profileAdder) {
-        for (ResourcePack pack : _paths) {
-            var profile = ResourcePackProfile.create("nativeloader/" + pack.getName(), Text.literal(pack.getName()), true, new ResourcePackProfile.PackFactory() {
-                @Override
-                public ResourcePack open(String name) {
-                    return pack;
-                }
-
-                @Override
-                public ResourcePack openWithOverlays(String name, ResourcePackProfile.Metadata metadata) {
-                    return pack;
-                }
-            }, ResourceType.CLIENT_RESOURCES, ResourcePackProfile.InsertionPosition.TOP, _source);
+        _factories.forEach((name, factory) -> {
+            var profile = ResourcePackProfile.create("nativeloader/" + name, Text.literal(name), true, factory, _type, ResourcePackProfile.InsertionPosition.TOP, _source);
             if (profile == null) return;
             profileAdder.accept(profile);
-        }
+        });
     }
 }

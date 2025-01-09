@@ -73,8 +73,8 @@ public class NativeLoader implements ModInitializer {
 
     private static void onLoad(String name, ResourcePackProfile.PackFactory factory) {
         try (var pack = factory.open(name)) {
-            pack.getNamespaces(ResourceType.CLIENT_RESOURCES).forEach(y -> {
-                pack.findResources(ResourceType.CLIENT_RESOURCES, y, "natives", (z, supplier) -> {
+            pack.getNamespaces(ResourceType.SERVER_DATA).forEach(y -> {
+                pack.findResources(ResourceType.SERVER_DATA, y, "natives", (z, supplier) -> {
                     if (!(z.getPath().endsWith(".dll") || z.getPath().endsWith(".so") || z.getPath().endsWith(".dylib")))
                         return;
 

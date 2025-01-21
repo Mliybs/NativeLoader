@@ -229,13 +229,13 @@ public class ItemWrapper extends Item {
     @Override
     public void usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks) {
         if (usageTick == null) super.usageTick(world, user, stack, remainingUseTicks);
-        else usageTick.invoke(Object.class, new Object[] { world, user, stack, remainingUseTicks }, LoadedLibraries.options );
+        else usageTick.invoke(Void.class, new Object[] { world, user, stack, remainingUseTicks }, LoadedLibraries.options );
     }
 
     @Override
     public void onItemEntityDestroyed(ItemEntity entity) {
         if (onItemEntityDestroyed == null) super.onItemEntityDestroyed(entity);
-        else onItemEntityDestroyed.invoke(Object.class, new Object[] { entity }, LoadedLibraries.options );
+        else onItemEntityDestroyed.invoke(Void.class, new Object[] { entity }, LoadedLibraries.options );
     }
 
     @Override
@@ -380,19 +380,19 @@ public class ItemWrapper extends Item {
     @Override
     public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
         if (inventoryTick == null) super.inventoryTick(stack, world, entity, slot, selected);
-        else inventoryTick.invoke(Object.class, new Object[] { stack, world, entity, slot, selected }, LoadedLibraries.options);
+        else inventoryTick.invoke(Void.class, new Object[] { stack, world, entity, slot, selected }, LoadedLibraries.options);
     }
 
     @Override
     public void onCraftByPlayer(ItemStack stack, World world, PlayerEntity player) {
         if (onCraftByPlayer == null) super.onCraftByPlayer(stack, world, player);
-        else onCraftByPlayer.invoke(Object.class, new Object[] { stack, world, player }, LoadedLibraries.options);
+        else onCraftByPlayer.invoke(Void.class, new Object[] { stack, world, player }, LoadedLibraries.options);
     }
 
     @Override
     public void onCraft(ItemStack stack, World world) {
         if (onCraft == null) super.onCraft(stack, world);
-        else onCraft.invoke(Object.class, new Object[] { stack, world }, LoadedLibraries.options);
+        else onCraft.invoke(Void.class, new Object[] { stack, world }, LoadedLibraries.options);
     }
 
     @Override
@@ -416,13 +416,13 @@ public class ItemWrapper extends Item {
     @Override
     public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
         if (onStoppedUsing == null) super.onStoppedUsing(stack, world, user, remainingUseTicks);
-        else onStoppedUsing.invoke(Object.class, new Object[] { stack, world, user, remainingUseTicks }, LoadedLibraries.options);
+        else onStoppedUsing.invoke(Void.class, new Object[] { stack, world, user, remainingUseTicks }, LoadedLibraries.options);
     }
 
     @Override
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
         if (appendTooltip == null) super.appendTooltip(stack, world, tooltip, context);
-        else appendTooltip.invoke(Object.class, new Object[] { stack, world, tooltip, context }, LoadedLibraries.options);
+        else appendTooltip.invoke(Void.class, new Object[] { stack, world, tooltip, context }, LoadedLibraries.options);
     }
 
     @Override

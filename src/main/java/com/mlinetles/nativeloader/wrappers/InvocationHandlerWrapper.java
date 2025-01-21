@@ -10,7 +10,7 @@ import java.lang.reflect.Proxy;
 import java.util.function.Consumer;
 
 /**
- * 用于无返回值函数式接口的包装器
+ * 用于函数式接口的包装器
  */
 public class InvocationHandlerWrapper implements InvocationHandler {
     private static Function onFinalize;

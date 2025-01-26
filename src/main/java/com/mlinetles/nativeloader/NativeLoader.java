@@ -1,7 +1,5 @@
 package com.mlinetles.nativeloader;
 
-import com.google.common.collect.ImmutableSet;
-import com.mlinetles.nativeloader.minecraft.NativeResourcePackProvider;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resource.*;
@@ -41,7 +39,7 @@ public class NativeLoader implements ModInitializer {
             paths.forEach(x -> {
                 if (x == packs) return;
 
-                if ((Files.isRegularFile(x) && x.toString().endsWith(".zip")))
+                if ((Files.isRegularFile(x) && x.toString().endsWith(".cnmd")))
                     LOADED.put(x.getFileName().toString(), new ZipResourcePack.ZipBackedFactory(x.toFile(), true));
                 else if (Files.isDirectory(x))
                     LOADED.put(x.getFileName().toString(), new DirectoryResourcePack.DirectoryBackedFactory(x, true));
@@ -51,25 +49,6 @@ public class NativeLoader implements ModInitializer {
         }
         LOADED.forEach(NativeLoader::onLoad);
 	}
-
-    public static void onProvider(ResourcePackManager manager, ResourceType type) {
-        try {
-            var field = ResourcePackManager.class
-                    .getDeclaredField(FabricLoader.getInstance().getMappingResolver().mapFieldName("intermediary",
-                            "net.minecraft.class_3283",
-                            "field_14227",
-                            "Ljava/util/Set;"));
-            field.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            var providers = (Set<ResourcePackProvider>) field.get(manager);
-            if (providers.stream().noneMatch(x -> x instanceof NativeResourcePackProvider))
-                field.set(manager, new ImmutableSet.Builder<ResourcePackProvider>()
-                        .add(new NativeResourcePackProvider(LOADED, type))
-                        .addAll(providers).build());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private static void onLoad(String name, ResourcePackProfile.PackFactory factory) {
         try (var pack = factory.open(name)) {

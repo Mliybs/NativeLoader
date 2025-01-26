@@ -28,7 +28,8 @@ public class NativeResourcePackProvider implements ResourcePackProvider {
 
     public void register(Consumer<ResourcePackProfile> profileAdder) {
         _factories.forEach((name, factory) -> {
-            var profile = ResourcePackProfile.create("nativeloader/" + name, Text.literal(name), true, factory, _type, ResourcePackProfile.InsertionPosition.TOP, _source);
+            var key = name.endsWith(".cnmd") ? name.substring(0, name.length() - 5) : name;
+            var profile = ResourcePackProfile.create("nativeloader/" + name, Text.translatableWithFallback("nativeloader." + key.toLowerCase(), key), true, factory, _type, ResourcePackProfile.InsertionPosition.TOP, _source);
             if (profile == null) return;
             profileAdder.accept(profile);
         });
